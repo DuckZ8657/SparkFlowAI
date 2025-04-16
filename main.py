@@ -7,7 +7,7 @@ import os
 app = Flask(__name__)
 
 # Lấy API Key từ Secrets
-GEMINI_API_KEY = os.getenv("AIzaSyA86MEt8HgBAqn1FhLB7yX4Z37gjmRjVUA")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
 
 
