@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stress Statistics</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg-light: linear-gradient(135deg, #cfd9df 0%, #e2ebf0 100%);
+      --bg-dark: linear-gradient(to bottom right, #0f2027, #203a43, #2c5364);
+      --text-light: #2e3440;
+      --text-dark: #eceff4;
+      --accent-light: #1abc9c;
+      --accent-dark: #f39c12;
+      --card-bg-light: rgba(255, 255, 255, 0.85);
+      --card-bg-dark: rgba(30, 30, 40, 0.5);
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: var(--bg-light);
+      color: var(--text-light);
+      transition: background 0.3s, color 0.3s;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    body.dark-mode {
+      background: var(--bg-dark);
+      color: var(--text-dark);
+    }
+
+    .wrapper {
+      min-height: 100vh;
+      padding: 2rem 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .theme-switcher {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 10;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 60px;
+      height: 30px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: 0.4s;
+      border-radius: 30px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "🌞";
+      height: 26px;
+      width: 26px;
+      left: 2px;
+      bottom: 2px;
+      background-color: white;
+      text-align: center;
+      line-height: 26px;
+      border-radius: 50%;
+      font-size: 14px;
+      transition: transform 0.4s;
+    }
+
+    input:checked + .slider {
+      background-color: #666;
+    }
+
+    input:checked + .slider:before {
+      content: "🌙";
+      transform: translateX(30px);
+    }
+
+    .typing-container {
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+
+    .typing-effect {
+      font-size: 1.8rem;
+      color: var(--accent-light);
+      white-space: nowrap;
+      overflow: hidden;
+      border-right: 3px solid var(--accent-light);
+      width: 0;
+      animation: typing 2.5s steps(30, end) forwards, blink 0.8s step-end infinite;
+    }
+
+    body.dark-mode .typing-effect {
+      color: var(--accent-dark);
+      border-right-color: var(--accent-dark);
+    }
+
+    @keyframes typing {
+      from { width: 0 }
+      to { width: 100% }
+    }
+
+    @keyframes blink {
+      50% { border-color: transparent; }
+    }
+
+    .card {
+      width: 100%;
+      max-width: 960px;
+      background-color: var(--card-bg-light);
+      backdrop-filter: blur(6px);
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+
+    body.dark-mode .card {
+      background-color: var(--card-bg-dark);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+    }
+
+    canvas {
+      max-width: 100%;
+      margin: 20px 0;
+    }
+
+    p, a {
+      font-size: 0.95rem;
+      margin-top: 1.25rem;
+    }
+
+    a {
+      color: var(--accent-light);
+      text-decoration: none;
+      margin: 0 8px;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    body.dark-mode a {
+      color: var(--accent-dark);
+    }
+
+    @media (max-width: 600px) {
+      .typing-effect {
+        font-size: 1.25rem;
+      }
+
+      .theme-switcher {
+        top: 10px;
+        right: 10px;
+        transform: scale(0.9);
+      }
+
+      .card {
+        padding: 1.25rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="theme-switcher">
+    <label class="switch">
+      <input type="checkbox" id="theme-toggle" />
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <div class="wrapper">
+    <div class="typing-container">
+      <h1 class="typing-effect">Your Stress Statistics</h1>
+    </div>
+
+    <div class="card">
+      <p>Average Stress Level: {{ avg_stress | round(2) }}</p>
+
+      {% if stress_levels %}
+      <canvas id="stressChart"></canvas>
+      {% else %}
+        <p>No stress data available yet!</p>
+      {% endif %}
+
+      <p><a href="/">Back to Home</a> | <a href="/history">View History</a></p>
+    </div>
+  </div>
+
+  <script>
+    const isDark = () => document.body.classList.contains('dark-mode');
+
+    function createChartConfig() {
+      const dark = isDark();
+
+      const fontColor = dark ? '#eceff4' : '#2e3440';
+      const gridColor = dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+      const accent = dark ? '#f39c12' : '#1abc9c';
+      const accentFill = dark ? 'rgba(243, 156, 18, 0.1)' : 'rgba(26, 188, 156, 0.1)';
+
+      return {
+        type: 'line',
+        data: {
+          labels: {{ timestamps | tojson }},
+          datasets: [{
+            label: 'Stress Level',
+            data: {{ stress_levels | tojson }},
+            borderColor: accent,
+            backgroundColor: accentFill,
+            fill: true,
+            tension: 0.3,
+            pointRadius: 4,
+            pointHoverRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              labels: {
+                color: fontColor
+              }
+            }
+          },
+          scales: {
+            x: {
+              ticks: { color: fontColor },
+              grid: { color: gridColor },
+              title: {
+                display: true,
+                text: 'Time',
+                color: fontColor
+              }
+            },
+            y: {
+              min: 0,
+              max: 10,
+              ticks: { color: fontColor },
+              grid: { color: gridColor },
+              title: {
+                display: true,
+                text: 'Stress Level',
+                color: fontColor
+              }
+            }
+          }
+        }
+      };
+    }
+
+
+    let chartInstance = null;
+
+    if ({{ stress_levels | tojson | length }} > 0) {
+      chartInstance = new Chart(
+        document.getElementById('stressChart').getContext('2d'),
+        createChartConfig()
+      );
+    }
+
+    document.getElementById('theme-toggle').addEventListener('change', () => {
+      document.body.classList.toggle('dark-mode');
+      if (chartInstance) {
+        chartInstance.destroy();
+        chartInstance = new Chart(
+          document.getElementById('stressChart').getContext('2d'),
+          createChartConfig()
+        );
+      }
+    });
+  </script>
+</body>
+</html>

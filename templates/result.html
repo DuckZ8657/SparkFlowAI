@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Your Plan</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg-light: linear-gradient(135deg, #cfd9df 0%, #e2ebf0 100%);
+      --bg-dark: linear-gradient(to bottom right, #0f2027, #203a43, #2c5364);
+      --text-light: #2e3440;
+      --text-dark: #eceff4;
+      --accent-light: #1abc9c;
+      --accent-dark: #f39c12;
+      --plan-bg-light: rgba(255, 255, 255, 0.85);
+      --plan-bg-dark: rgba(30, 30, 40, 0.5);
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: var(--bg-light);
+      color: var(--text-light);
+      transition: background 0.3s, color 0.3s;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+      text-align: center;
+    }
+
+    body.dark-mode {
+      background: var(--bg-dark);
+      color: var(--text-dark);
+    }
+
+    .theme-switcher {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 10;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 60px;
+      height: 30px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: 0.4s;
+      border-radius: 30px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "🌞";
+      height: 26px;
+      width: 26px;
+      left: 2px;
+      bottom: 2px;
+      background-color: white;
+      text-align: center;
+      line-height: 26px;
+      border-radius: 50%;
+      font-size: 14px;
+      transition: transform 0.4s;
+    }
+
+    input:checked + .slider {
+      background-color: #666;
+    }
+
+    input:checked + .slider:before {
+      content: "🌙";
+      transform: translateX(30px);
+    }
+
+    .typing-container {
+      margin-bottom: 2rem;
+    }
+
+    .typing-effect {
+      font-size: 1.8rem;
+      color: var(--accent-light);
+      white-space: nowrap;
+      overflow: hidden;
+      border-right: 3px solid var(--accent-light);
+      width: 0;
+      animation: typing 2.5s steps(30, end) forwards, blink 0.8s step-end infinite;
+    }
+
+    body.dark-mode .typing-effect {
+      color: var(--accent-dark);
+      border-right-color: var(--accent-dark);
+    }
+
+    @keyframes typing {
+      from { width: 0 }
+      to { width: 100% }
+    }
+
+    @keyframes blink {
+      50% { border-color: transparent; }
+    }
+
+    .plan-box {
+      background-color: var(--plan-bg-light);
+      backdrop-filter: blur(6px);
+      border-radius: 12px;
+      padding: 2rem;
+      max-width: 800px;
+      width: 100%;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+    }
+
+    body.dark-mode .plan-box {
+      background-color: var(--plan-bg-dark);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+    }
+
+    a {
+      color: var(--accent-light);
+      text-decoration: none;
+      margin: 0 8px;
+      font-size: 0.95rem;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    body.dark-mode a {
+      color: var(--accent-dark);
+    }
+
+    @media (max-width: 600px) {
+      .typing-effect {
+        font-size: 1.25rem;
+      }
+
+      .theme-switcher {
+        top: 10px;
+        right: 10px;
+        transform: scale(0.9);
+      }
+
+      .plan-box {
+        padding: 1.25rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="theme-switcher">
+    <label class="switch">
+      <input type="checkbox" id="theme-toggle" />
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <div class="typing-container">
+    <h1 class="typing-effect">Your Relaxation Plan</h1>
+  </div>
+
+  <div class="plan-box">
+    <p>{{ plan | replace('\n', '<br>') | safe }}</p>
+    <p><a href="/">Create Another Plan</a> | <a href="/history">View Past Plans</a></p>
+  </div>
+
+  <script>
+    const toggle = document.getElementById('theme-toggle');
+    toggle.addEventListener('change', function () {
+      document.body.classList.toggle('dark-mode', this.checked);
+    });
+  </script>
+</body>
+</html>
